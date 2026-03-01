@@ -1,0 +1,8 @@
+.grid {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  gap: 2px;
+  background-color: #1a1a1a;
+}
