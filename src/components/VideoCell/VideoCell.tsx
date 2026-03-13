@@ -12,38 +12,71 @@ interface VideoCellProps {
 
 const YOUTUBE_LIVE_FILTER = "EgJAAQ%3D%3D";
 
-function openYouTubeSearch(query: string) {
+function looksLikeUrl(input: string): boolean {
+  const s = input.trim().toLowerCase();
+  return (
+    s.startsWith("http://") ||
+    s.startsWith("https://") ||
+    s.includes("youtube.com") ||
+    s.includes("youtu.be") ||
+    /^[a-zA-Z0-9_-]{11}$/.test(input.trim())
+  );
+}
+
+function openYouTubeSearch(query: string, onClose: () => void) {
   const params = new URLSearchParams({
-    search_query: query || "live",
+    search_query: query,
     sp: YOUTUBE_LIVE_FILTER,
   });
-  window.open(
+  const popup = window.open(
     `https://www.youtube.com/results?${params.toString()}`,
     "yt-browse",
     "width=1100,height=700,scrollbars=yes,resizable=yes"
   );
+  if (popup) {
+    const timer = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(timer);
+        onClose();
+      }
+    }, 300);
+  }
 }
 
 export function VideoCell({ cell, onSetVideoId, onClearCell }: VideoCellProps) {
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState(false);
-  const [mode, setMode] = useState<"url" | "search">("url");
+  const [hint, setHint] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = useCallback(() => {
-    if (mode === "search") {
-      openYouTubeSearch(inputValue);
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+
+    // If it looks like a URL or video ID, try to load it directly
+    if (looksLikeUrl(trimmed)) {
+      const videoId = extractVideoId(trimmed);
+      if (videoId) {
+        setError(false);
+        setHint(false);
+        setInputValue("");
+        onSetVideoId(cell.id, videoId);
+      } else {
+        setError(true);
+      }
       return;
     }
-    const videoId = extractVideoId(inputValue);
-    if (videoId) {
-      setError(false);
+
+    // Otherwise treat as a search query
+    setError(false);
+    setHint(true);
+    openYouTubeSearch(trimmed, () => {
+      // When popup closes, clear search and focus input for pasting
       setInputValue("");
-      onSetVideoId(cell.id, videoId);
-    } else {
-      setError(true);
-    }
-  }, [inputValue, cell.id, onSetVideoId, mode]);
+      setHint(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    });
+  }, [inputValue, cell.id, onSetVideoId]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
@@ -51,6 +84,7 @@ export function VideoCell({ cell, onSetVideoId, onClearCell }: VideoCellProps) {
       if (e.key === "Escape") {
         setInputValue("");
         setError(false);
+        setHint(false);
       }
     },
     [handleSubmit]
@@ -59,13 +93,6 @@ export function VideoCell({ cell, onSetVideoId, onClearCell }: VideoCellProps) {
   const handleClear = useCallback(() => {
     onClearCell(cell.id);
   }, [cell.id, onClearCell]);
-
-  const toggleMode = useCallback(() => {
-    setMode((m) => (m === "url" ? "search" : "url"));
-    setInputValue("");
-    setError(false);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  }, []);
 
   if (cell.videoId !== null) {
     return (
@@ -95,30 +122,12 @@ export function VideoCell({ cell, onSetVideoId, onClearCell }: VideoCellProps) {
       className="video-cell video-cell--empty"
       onClick={() => inputRef.current?.focus()}
     >
-      <div className="video-cell__mode-toggle">
-        <button
-          className={`video-cell__mode-btn${mode === "url" ? " video-cell__mode-btn--active" : ""}`}
-          onClick={(e) => { e.stopPropagation(); if (mode !== "url") toggleMode(); }}
-        >
-          Paste URL
-        </button>
-        <button
-          className={`video-cell__mode-btn${mode === "search" ? " video-cell__mode-btn--active" : ""}`}
-          onClick={(e) => { e.stopPropagation(); if (mode !== "search") toggleMode(); }}
-        >
-          Search Live
-        </button>
-      </div>
       <div className="video-cell__input-group">
         <input
           ref={inputRef}
           className={`video-cell__input${error ? " video-cell__input--error" : ""}`}
-          type={mode === "url" ? "url" : "text"}
-          placeholder={
-            mode === "url"
-              ? "Paste YouTube URL and press Enter..."
-              : "Search YouTube livestreams..."
-          }
+          type="text"
+          placeholder="Paste URL or search livestreams..."
           value={inputValue}
           onChange={(e) => {
             setInputValue(e.target.value);
@@ -128,15 +137,15 @@ export function VideoCell({ cell, onSetVideoId, onClearCell }: VideoCellProps) {
           onClick={(e) => e.stopPropagation()}
         />
         <button className="video-cell__submit-btn" onClick={handleSubmit}>
-          {mode === "url" ? "Load" : "Search"}
+          Go
         </button>
       </div>
       {error && (
         <span className="video-cell__error-msg">Invalid YouTube URL</span>
       )}
-      {mode === "search" && (
+      {hint && (
         <span className="video-cell__hint">
-          Opens YouTube in a popup — copy the stream URL and paste it back here
+          Copy a stream URL from the popup, then paste it here
         </span>
       )}
     </div>

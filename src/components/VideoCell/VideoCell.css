@@ -54,34 +54,6 @@
   gap: 8px;
 }
 
-.video-cell__mode-toggle {
-  display: flex;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  padding: 2px;
-}
-
-.video-cell__mode-btn {
-  padding: 5px 14px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.video-cell__mode-btn:hover {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.video-cell__mode-btn--active {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-}
-
 .video-cell__input-group {
   display: flex;
   gap: 6px;
