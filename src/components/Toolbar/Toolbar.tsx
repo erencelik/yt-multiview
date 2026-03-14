@@ -9,8 +9,7 @@ interface ToolbarProps {
 
 export function Toolbar({ presets, currentLayout, onSelectLayout }: ToolbarProps) {
   return (
-    <>
-      <div className="toolbar-trigger" />
+    <div className="toolbar-wrapper">
       <div className="toolbar" role="toolbar" aria-label="Grid layout selector">
         <span className="toolbar__label">Layout</span>
         {presets.map((preset) => (
@@ -25,6 +24,6 @@ export function Toolbar({ presets, currentLayout, onSelectLayout }: ToolbarProps
           </button>
         ))}
       </div>
-    </>
+    </div>
   );
 }

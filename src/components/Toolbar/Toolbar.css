@@ -1,19 +1,14 @@
-/* Invisible hot zone at bottom of screen */
-.toolbar-trigger {
+/* Wrapper acts as hover zone — same width as toolbar content */
+.toolbar-wrapper {
   position: fixed;
   bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40px;
-  z-index: 99;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding-bottom: 12px;
 }
 
 .toolbar {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  z-index: 100;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -25,15 +20,15 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   opacity: 0;
   pointer-events: none;
+  transform: translateY(20px);
   transition: opacity 0.25s ease, transform 0.25s ease;
   white-space: nowrap;
 }
 
-.toolbar-trigger:hover ~ .toolbar,
-.toolbar:hover {
+.toolbar-wrapper:hover .toolbar {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 .toolbar__label {
